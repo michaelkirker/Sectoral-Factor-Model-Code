@@ -1,0 +1,261 @@
+\NeedsTeXFormat{LaTeX2e}
+\documentclass[11pt,english,a4paper]{article}
+\usepackage{fancyhdr}
+\usepackage{amsmath,amssymb}
+\usepackage{setspace}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{threeparttable}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{left=4.5cm,right=4.5cm,top=4cm,bottom=4cm}
+
+\usepackage{rotating}
+\usepackage{multirow}
+\onehalfspacing
+\usepackage{subfig}
+
+
+
+
+
+
+\begin{document}
+\title{Technical Appendix for new factor model of core inflation.}
+\date{\today}
+\author{{\bf Michael Kirker}}
+
+\maketitle
+
+
+
+\begin{abstract}
+This note extends the factor model of core inflation described in \href{http://rbnz.govt.nz/research/discusspapers/dp10_13.pdf}{DP2010/13} (and subsequent versions of the paper). Only the Gibbs sampling algorithm is detailed here. For more information, the reader is referred to the the original paper.
+\end{abstract}
+
+
+
+
+\section*{Gibbs sampling algorithm}\label{apdix:Gibbs}
+
+
+\subsection*{The model}
+The entire dynamic factor model is given by:
+\begin{equation}\label{eq:model}
+\pi_{i,t} = \phi_{i,t} + \boldsymbol{\beta^{tr}_{i}}' \mathbf{F^{tr}_{t}} +  \boldsymbol{\beta^{nt}_{i}}' \mathbf{F^{nt}_{t}} + \nu_{i,t}
+\end{equation}
+
+where $\phi_{i,t}$ is a dummy constant to capture the GST effect (or other one-off effects) for series $i$ in period $t$, $\mathbf{F^{tr}_{t}}$ is a vector of $n$ number of tradable factors, $\mathbf{F^{nt}_{t}}$ is a vector of $m$ number of nontradable factors, $\boldsymbol{\beta^{tr}_{i}}$ and $\boldsymbol{\beta^{nt}_{i}}$ are vectors of factor loadings, and $\nu_{i,t}$ is the idiosyncratic error term.
+
+Each factor is assumed to follow an AR(2) process:
+
+\begin{equation}\label{eq:ar2fact}
+F^{k}_{a,t} = \sum^{2}_{j=1} \rho^{k}_{a,j} F^{k}_{a,t-j} + \varepsilon_{a,t},      \qquad \qquad var\left( \varepsilon_{a,t} \right) =Q_{a}
+\end{equation}
+
+where $k = \{tr,nt\}$ and $a$ is an index number of factors ($a=1,\ldots,K$).
+
+And the idiosyncratic error term follows an AR(1) process
+\begin{equation}\label{eq:noncore}
+\nu _{i,t} = \alpha_{i}\nu_{i,t-1}+\eta_{i,t},       \qquad \qquad var(\eta_{i,t}) = R_{i}
+\end{equation}
+
+In state-space form, the measurement equation for the model can be represented as:
+
+\begin{equation}\label{eq:ss1}
+\begin{pmatrix}
+\pi_{1,t}  - \alpha_{1} \pi_{1,t-1} \\
+\vdots \\
+\pi_{N,t}  - \alpha_{N} \pi_{N,t-1}
+\end{pmatrix}
+=
+\begin{pmatrix}
+\boldsymbol{\beta}_{1}' & - \alpha_{1}\boldsymbol{\beta}_{1}' \\
+\vdots & \vdots \\
+\boldsymbol{\beta}_{N}' & - \alpha_{N}\boldsymbol{\beta}_{N}' \\
+\end{pmatrix}
+\\
+\begin{pmatrix}
+\mathbf{F}_{t}\\
+\mathbf{F}_{t-1}
+\end{pmatrix}
++
+\begin{pmatrix}
+\eta_{1,t}\\
+\vdots\\
+\eta_{N,t}
+\end{pmatrix},
+\end{equation}
+
+where $\hat{\pi}_{i,t} = \pi_{i,t}-\phi_{i,t}$, $\boldsymbol{\beta}_{i} = [\boldsymbol{\beta^{tr}_{i}}' \quad \boldsymbol{\beta^{nt}_{i}}']'$ for $i=\{1:N\}$, and $\mathbf{F}_{t} = [\mathbf{F^{tr}_{t}}' \quad \mathbf{F^{nt}_{t}}' ]'$.
+
+And the transition equation can be represented as:
+
+
+\begin{equation}\label{eq:ss2}
+\begin{pmatrix}
+\mathbf{F}_{t}\\
+\mathbf{F}_{t-1}
+\end{pmatrix}
+=
+\begin{pmatrix}
+\mathbf{J1}      & \mathbf{J2}\\
+\mathbf{I_{n+m}}   & \mathbf{0}\\
+\end{pmatrix}
+\\
+\begin{pmatrix}
+\mathbf{F}_{t-1}\\
+\mathbf{F}_{t-2}
+\end{pmatrix}
++
+\begin{pmatrix}
+\boldsymbol{\varepsilon_{t}}\\
+\boldsymbol{0}
+\end{pmatrix},
+\end{equation}
+
+
+where
+
+\begin{eqnarray*}
+\mathbf{J1}
+=
+\begin{pmatrix}
+\rho_{1,1}  & 0         & 0\\
+0           & \ddots    & 0\\
+0           & 0         & \rho_{n+m,1}\\
+\end{pmatrix},
+\qquad \qquad \qquad
+\mathbf{J2}
+=
+\begin{pmatrix}
+\rho_{1,2}  & 0         & 0\\
+0           & \ddots    & 0\\
+0           & 0         & \rho_{n+m,2}\\
+\end{pmatrix},
+\end{eqnarray*}
+
+$\boldsymbol{\varepsilon_{t}} = [\varepsilon_{1,t}, \ldots \varepsilon_{n+m,t}]'$, and $\mathbf{I_{n+m}}$  is a $n+m$ by $n+m$ identity matrix.
+
+
+\subsection*{Prior distributions}
+
+Priors ($\mathbf{B_{k,i}}$) for each factor loading ($\boldsymbol{\beta} = [\boldsymbol{\beta^{tr}_1} \ldots \boldsymbol{\beta^{tr}_n} \quad \boldsymbol{\beta^{nt}_1} \ldots \boldsymbol{\beta^{nt}_m} ]'$) are centered upon the factors found by via Principal Components. The priors are distributed normally:
+
+\begin{equation*}
+\mathbf{B_{k,i}} \sim N \left( \mathbf{PC}, \theta \mathbf{I_{K\cdot N}} \right)
+\end{equation*}
+
+where $\mathbf{PC}$ is a vector of the factors found via principal components. The value $\theta=0.05$ is chosen to scale the variance of the factor loading priors.
+
+To ensure that the tradable (nontradable) principal component factor is only capturing the co-movement in tradable (nontradable) prices, all series that load onto both factors are excluded when computing the principal component factors.
+
+
+The prior of the GST dummy ($\mathbf{P_{t}}$) for each dummy at time $t$ ($\boldsymbol{\phi}_{t} = [\phi_{1,t}, \ldots, \phi_{N,t}]'$) is normally distributed:
+\begin{equation*}
+\mathbf{P_{t}} \sim N \left( \mathbf{P_{t}}, \boldsymbol{\Sigma_{P,t}} \right)
+\end{equation*}
+
+where $\boldsymbol{\Sigma_{P,t}}$ is a diagonal matrix.
+
+\subsection*{Simulating the posterior distributions}
+
+\subsubsection*{Step 0: Initial  setup}
+
+Starting values for the factor loadings are also obtained from the principal component estimator. To assist the initialisation of the identification process, if the tradable CPI inflation series ($\pi_{2,t}$) is loaded negatively onto the tradable factors found by principal components, then the signs on both the factor and factor loadings are reversed for all tradable series. The same check is carried out for nontradable CPI inflation. This steps assists the model with imposing the positive factor loading sign restriction later in the algorithm.
+
+The starting value of the AR coefficients ($\alpha_{i}$) is set equal to the arbitrary starting value of zero. And the starting value for the variance of the idiosyncratic components ($R_{i}$) is set equal to unity.
+
+The aim of the Gibbs sampling algorithm is to sample from the posterior distributions of the factor loadings ($\boldsymbol{\beta}$), serial correlation coefficients ($\boldsymbol{\alpha} = [\alpha_{1}, \ldots, \alpha_{N}]'$), variance of the idiosyncratic components ($R_{i}$), factor transition coefficients ($\boldsymbol{\rho} = [\rho_{1,1}, \ldots, \rho_{K,1}, \rho_{1,2}, \ldots, \rho_{K,2}]'$), and factors ($\mathbf{F^{tr}_{t}}$ and $\mathbf{F^{nt}_{t}}$).
+
+
+
+\subsubsection*{Step 1: Sample the factor loadings}
+
+Substituting equation \ref{eq:noncore} into equation \ref{eq:model}, we are able to rewrite the system without any autocorrelation in the error term:
+\begin{equation}
+\underbrace{\pi_{i,t}- \alpha_{i}\pi_{i,t-1}}_{Y^{*}_{i,t}} = \underbrace{[\boldsymbol{\beta^{tr}_{i}}' \; \; \boldsymbol{\beta^{nt}_{i}}']'}_{\Gamma_{i}} \underbrace{[\mathbf{F^{tr}_{t}} - \alpha_{i} \mathbf{F^{tr}_{t-1}},  \; \; \mathbf{F^{nt}_{t}} - \alpha_{i} \mathbf{F^{nt}_{t-1}} ]}_{X^{*}_{t}}  + \eta_{i,t}
+\end{equation}
+
+
+For each series ($i=1,\ldots,N$), the factor loadings can be sampled from the posterior distribution defined as:
+\begin{equation*}
+ \Gamma_{i} \sim N( \overline{\Gamma_{i}},V_{i})
+\end{equation*}
+
+where
+
+\begin{eqnarray*}
+    \overline{\Gamma_{i}} &=& \left( \theta^{-1} + \frac{1}{R_{i}} (X^{*,k}_{t})'(X^{*,k}_{t})   \right)^{-1}     \left(   \theta^{-1}  B_{k,i}  + \frac{1}{R_{i}} (X^{*,k}_{t})'(Y^{*}_{i,t})   \right) \\
+    V_{i} &=& \left( \theta^{-1} + \frac{1}{R_{i}} (X^{*,k}_{t})'(X^{*,k}_{t}) \right)^{-1}
+\end{eqnarray*}
+
+After each draw, the factor loadings a checked to ensure that tradable (nontradable) CPI inflation is positively loaded onto the tradable (nontradable) factors. If it is not, the draw is discarded and a new random draw of the factor loadings is made. This imposes the sign identification onto the model.
+
+The over-identifying restriction is also imposed at this step by fixing the factor loadings $\boldsymbol{\beta^{k}_{i}}$ (for $k=\{tr,nt\}$) to zero if series $i$ is not classified as a tradable or nontradable series.
+
+
+\subsubsection*{Step 2: Sample serial correlation coefficients}
+
+Using the updated factor loadings found in the previous step, we are able to compute the prediction error ($\nu_{i,t}$) of equation \ref{eq:model}. And using equation \ref{eq:noncore} we are able to sample $\alpha_{i}$ from the following posterior distribution:
+\begin{equation*}
+ \alpha_{i} \sim N( \overline{\alpha_{i}},V_{i})
+\end{equation*}
+
+where
+
+\begin{eqnarray*}
+    \overline{\alpha_{i}} &=& \left( \nu_{i,t-1}'\nu_{i,t-1}   \right)     \left(   \nu_{i,t-1}'\nu_{i,t}  \right) \\
+    V_{i} &=& \left(  \nu_{i,t-1}'\nu_{i,t-1}  \right)^{-1} R_{i}
+\end{eqnarray*}
+
+When drawing the new estimates of $\alpha_{i}$, only those draws with an absolute value less than unity are retained. This ensures the stationarity of the noncore series.
+
+
+\subsubsection*{Step 3: Sample $R_{i}$}
+
+Using the new estimate of $\alpha_{i}$ for each series, we are able to compute the error term $\eta_{i,t}$ from equation \ref{eq:noncore} and drawn a new $R_{i}$ estimates from Inverse Gamma posterior distribution:
+\begin{equation*}
+ R_{i} \sim N( \eta_{i,t}'\eta_{i,t} ,T)
+\end{equation*}
+
+Where T is the sample length.
+
+
+
+\subsubsection*{Step 4: Sample the coefficients of the factor transition equation}
+
+For each factor, the coefficients ($A = [\rho^{k}_{t-1} \: \: \: \: \: \: \rho^{k}_{t-2}]'$) from equation \ref{eq:ar2fact} are sampled from the normal posterior distribution:
+
+\begin{equation*}
+ A \sim N( \overline{A} , Z)
+\end{equation*}
+
+where
+\begin{eqnarray*}
+    \overline{A} &=& \left( X'X   \right)^{-1}     \left(   X' F^{k}_{t} \right) \\
+    Z &=& \left(  X'X  \right)^{-1}
+\end{eqnarray*}
+
+and where $X =[F^{k}_{t-1} F^{k}_{t-2}]$.
+
+When drawing the new estimates of the coefficients, only those draws that imply a stationary process for the factors are retained.
+
+We do not have to sample the variance of the shock to the transition equations $(var\left( \varepsilon_{a,t} \right) =Q_{a})$ as this is fixed to unity to ensure the scale of the factor and factor loadings can be uniquely identified.
+
+\subsubsection*{Step 5: Sample factors using Kalman smoother}
+
+Using the state space representation of the model (equations \ref{eq:ss1} and \ref{eq:ss2}), the factor estimates are updated, conditional on the other parameters found in steps one to four, using the Carter-Kohn (1994) algorithm, which employs the Kalman smoother. The reader is referred to chapter eight of Kim and Nelson (1999) for further details on the implementation of the Carter-Kohn (1994) algorithm.
+
+
+
+\subsubsection*{Repeat steps 1-5}
+
+Steps one to five are repeated for each iteration of the Gibbs sampling algorithm. After an initial burn in period, the draws are saved and used in the computation of all the statistics and graphs in the paper.
+
+
+\end{document} 
