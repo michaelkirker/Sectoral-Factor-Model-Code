@@ -26,7 +26,7 @@ Git repository: [https://github.com/michaelkirker/Sectoral-Factor-Model-Code]("h
 * /code/
 	* Folder containing functions required to run the model.
 * /documentation/ 
-	* Collection of documentation prodividing more background on the code
+	* Collection of documentation providing more background on the code
 * /input/
 	* Folder containing the data input required to estimate and run the model
 * /output/ 
